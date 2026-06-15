@@ -1,0 +1,54 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0c0c10;
+  --surface:  #15151c;
+  --surface2: #1e1e28;
+  --surface3: #272733;
+  --border:   #2c2c3a;
+  --border2:  #3a3a4e;
+  --accent:   #a78bfa;       /* violet */
+  --accent2:  #34d399;       /* emerald — success */
+  --danger:   #f87171;
+  --warn:     #fbbf24;
+  --text:     #f1f5f9;
+  --muted:    #64748b;
+  --muted2:   #94a3b8;
+  --radius:   12px;
+  --font:     'Inter', system-ui, sans-serif;
+}
+
+html { font-size: 15px; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.55;
+  min-height: 100vh;
+}
+
+button { cursor: pointer; font-family: var(--font); }
+a { color: var(--accent); text-decoration: none; }
+
+input, select, textarea {
+  font-family: var(--font);
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(167,139,250,0.15); }
+select option { background: var(--surface2); }
+
+::placeholder { color: var(--muted); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
