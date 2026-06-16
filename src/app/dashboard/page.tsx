@@ -87,7 +87,6 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false)
 
   // Schedule fetch
-  const [schedulePassword, setSchedulePassword] = useState('')
   const [courses, setCourses] = useState<Course[]>([])
   const [loadingSchedule, setLoadingSchedule] = useState(false)
   const [scheduleError, setScheduleError] = useState('')
@@ -123,14 +122,13 @@ export default function Dashboard() {
 
   // ── Fetch live schedule ─────────────────────────────────────────────────────
   const fetchSchedule = async () => {
-    if (!schedulePassword) return
     setLoadingSchedule(true)
     setScheduleError('')
     try {
       const res = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: schedulePassword }),
+        body: JSON.stringify({}),
       })
       const data = await res.json()
       if (!res.ok) { setScheduleError(data.error || 'Failed'); return }
@@ -239,39 +237,16 @@ export default function Dashboard() {
         <div>
           {/* Password gate to fetch schedule */}
           {!scheduleLoaded && (
-            <div style={{
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)', padding: '22px',
-            }}>
-              <p style={{ color: 'var(--muted2)', fontSize: 14, marginBottom: 14 }}>
-                Enter your gym password to load the live class schedule from MySports.
-              </p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <input
-                  type="password"
-                  placeholder="Your gym password"
-                  value={schedulePassword}
-                  onChange={e => setSchedulePassword(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && fetchSchedule()}
-                />
-                <button
-                  onClick={fetchSchedule}
-                  disabled={loadingSchedule || !schedulePassword}
-                  style={{
-                    background: 'var(--accent)', border: 'none', borderRadius: 8,
-                    color: '#0f0a1e', fontWeight: 700, fontSize: 14, padding: '10px 20px',
-                    whiteSpace: 'nowrap',
-                    opacity: loadingSchedule || !schedulePassword ? 0.5 : 1,
-                  }}
-                >
-                  {loadingSchedule ? '…' : 'Load schedule'}
-                </button>
-              </div>
-              {scheduleError && (
-                <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 10 }}>{scheduleError}</p>
-              )}
-            </div>
-          )}
+  <div style={{ textAlign: 'center', padding: '20px' }}>
+    <button onClick={fetchSchedule} style={{
+      background: 'var(--accent)', border: 'none', borderRadius: 8,
+      color: '#0f0a1e', fontWeight: 700, fontSize: 15, padding: '12px 28px',
+    }}>
+      {loadingSchedule ? '…' : '📅 Stundenplan laden'}
+    </button>
+    {scheduleError && <p style={{ color: 'var(--danger)', marginTop: 10, fontSize: 13 }}>{scheduleError}</p>}
+  </div>
+)}
 
           {/* Refresh button after loaded */}
           {scheduleLoaded && (

@@ -1,50 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from '@/lib/mysports'
-import { loadUser, saveUser, emailToUserId } from '@/lib/storage'
-import { createSession, sessionCookieOptions } from '@/lib/auth'
-import type { UserProfile } from '@/lib/types'
+import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
+import { loadUser } from '@/lib/storage'
+import { getToken, fetchCourses } from '@/lib/mysports'
+import { getScheduleFetchRange } from '@/lib/timing'
 
-export async function POST(req: NextRequest) {
-  const { action, email, password } = await req.json()
+export async function POST() {
+  const session = await getSession()
+  if (!session) return NextResponse.json({ error: 'Not logged in' }, { status: 401 })
 
-  if (action === 'login') {
-    // Verify credentials directly with MySports
-    let token: string
-    try {
-      token = await getToken(email, password)
-    } catch {
-      return NextResponse.json({ error: 'Email oder Passwort falsch' }, { status: 401 })
-    }
+  const profile = loadUser(session.userId)
+  if (!profile) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-    // Auto-create user profile if doesn't exist
-    const userId = emailToUserId(email)
-    let profile = loadUser(userId)
-    if (!profile) {
-      profile = {
-        userId, email,
-        passwordHash: password, // stored for cron use
-        notificationEmail: email,
-        bookings: [],
-        createdAt: new Date().toISOString(),
-      } as UserProfile
-      saveUser(profile)
-    } else {
-      // Update stored password in case it changed
-      profile.passwordHash = password
-      saveUser(profile)
-    }
-
-    const session = await createSession({ userId, email })
-    const res = NextResponse.json({ ok: true })
-    res.cookies.set(sessionCookieOptions(session))
-    return res
+  try {
+    const token = await getToken(profile.email, profile.passwordHash)
+    const { from, to } = getScheduleFetchRange()
+    const courses = await fetchCourses(token, from, to)
+    return NextResponse.json({ courses })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
-
-  if (action === 'logout') {
-    const res = NextResponse.json({ ok: true })
-    res.cookies.delete('gym_session')
-    return res
-  }
-
-  return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }
