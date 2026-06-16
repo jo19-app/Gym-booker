@@ -12,7 +12,7 @@ export interface SessionPayload {
 }
 
 export async function createSession(payload: SessionPayload): Promise<string> {
-  return new SignJWT(payload as Record<string, unknown>)
+  return new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('30d')
     .sign(SECRET)
