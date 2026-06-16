@@ -1,41 +1,31 @@
 import type { Course } from './types'
-import { MYSPORTS_API, STUDIO_SLUG } from './types'
+import { STUDIO_SLUG } from './types'
+
+const BASE = 'https://member.peoplesfitness.de'
 
 export async function getToken(email: string, password: string): Promise<string> {
-  const res = await fetch(`${MYSPORTS_API}/v1/auth/token`, {
+  const res = await fetch(`${BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ username: email, password }),
     cache: 'no-store',
   })
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`Login failed (${res.status}): ${body}`)
-  }
+  if (!res.ok) throw new Error(`Login failed (${res.status})`)
   const data = await res.json()
-  const token = data.token || data.access_token || data.jwt
-  if (!token) throw new Error('No token in login response')
+  const token = data.access_token || data.sessionId
+  if (!token) throw new Error('No token in response')
   return token
 }
 
-export async function fetchCourses(
-  token: string,
-  fromDate: string, // YYYY-MM-DD
-  toDate: string
-): Promise<Course[]> {
+export async function fetchCourses(token: string, fromDate: string, toDate: string): Promise<Course[]> {
   const params = new URLSearchParams({ from: fromDate, to: toDate })
-  const res = await fetch(
-    `${MYSPORTS_API}/v1/studios/${STUDIO_SLUG}/courses?${params}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    }
-  )
+  const res = await fetch(`${BASE}/studio/${STUDIO_SLUG}/courses?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  })
   if (!res.ok) throw new Error(`Fetching courses failed (${res.status})`)
   const data = await res.json()
   const raw: Course[] = Array.isArray(data) ? data : (data.courses || data.data || [])
-
-  // Enrich each course: compute when its booking window opens
   return raw.map(c => ({
     ...c,
     bookingOpensAt: c.bookingOpensAt
@@ -44,17 +34,14 @@ export async function fetchCourses(
 }
 
 export async function bookCourse(token: string, courseId: string) {
-  const res = await fetch(
-    `${MYSPORTS_API}/v1/studios/${STUDIO_SLUG}/courses/${courseId}/bookings`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}),
-    }
-  )
+  const res = await fetch(`${BASE}/studio/${STUDIO_SLUG}/courses/${courseId}/bookings`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  })
   const data = await res.json().catch(() => ({}))
   if (res.ok || res.status === 201) {
     return {
