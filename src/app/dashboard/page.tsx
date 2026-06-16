@@ -534,16 +534,3 @@ function BookingRow({
     </div>
   )
 }
-
-function StatusChip({ result }: { result?: string }) {
-  if (!result) return <span style={{ color: 'var(--muted)', fontSize: 11 }}>Noch kein Versuch</span>
-  const ok = result.startsWith('✅')
-  const wait = result.startsWith('⏳')
-  const color = ok ? 'var(--accent2)' : wait ? 'var(--warn)' : 'var(--danger)'
-  return (
-    <span style={{ color, fontSize: 11, display: 'flex', alignItems: 'center', gap: 4 }}>
-      <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
-      {result.replace(/^[✅❌⏳]\s*/, '')}
-    </span>
-  )
-}
