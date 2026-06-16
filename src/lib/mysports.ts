@@ -3,10 +3,23 @@ import { STUDIO_SLUG } from './types'
 
 const BASE = 'https://member.peoplesfitness.de'
 
+const NOX_HEADERS = {
+  'X-Tenant': 'peoples-gym',
+  'X-Public-Facility-Group': 'BRANDENPEOPLESFITNESSCLUBS-9668881C08B84496B662DD3EB26D420C',
+  'X-Nox-Client-Type': 'WEB',
+  'X-Ms-Web-Context': `/studio/${STUDIO_SLUG}`,
+  'X-Nox-Web-Context': 'v=1',
+  'Content-Type': 'application/json',
+}
+
 export async function getToken(email: string, password: string): Promise<string> {
+  const basic = btoa(`${email}:${password}`)
   const res = await fetch(`${BASE}/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      ...NOX_HEADERS,
+      'Authorization': `Basic ${basic}`,
+    },
     body: JSON.stringify({ username: email, password }),
     cache: 'no-store',
   })
@@ -20,7 +33,7 @@ export async function getToken(email: string, password: string): Promise<string>
 export async function fetchCourses(token: string, fromDate: string, toDate: string): Promise<Course[]> {
   const params = new URLSearchParams({ from: fromDate, to: toDate })
   const res = await fetch(`${BASE}/studio/${STUDIO_SLUG}/courses?${params}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { ...NOX_HEADERS, 'Authorization': `Bearer ${token}` },
     cache: 'no-store',
   })
   if (!res.ok) throw new Error(`Fetching courses failed (${res.status})`)
@@ -36,10 +49,7 @@ export async function fetchCourses(token: string, fromDate: string, toDate: stri
 export async function bookCourse(token: string, courseId: string) {
   const res = await fetch(`${BASE}/studio/${STUDIO_SLUG}/courses/${courseId}/bookings`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { ...NOX_HEADERS, 'Authorization': `Bearer ${token}` },
     body: JSON.stringify({}),
   })
   const data = await res.json().catch(() => ({}))
