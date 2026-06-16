@@ -19,11 +19,11 @@ export const maxDuration = 60
 
 const credCache = new Map<string, { password: string; expiresAt: number }>()
 
-export function cacheCredential(userId: string, password: string) {
-  credCache.set(userId, { password, expiresAt: Date.now() + 30 * 60_000 }) // 30 min
+function cacheCredential(userId: string, password: string) {
+  credCache.set(userId, { password, expiresAt: Date.now() + 30 * 60_000 })
 }
 
-export function getCachedCredential(userId: string): string | null {
+function getCachedCredential(userId: string): string | null {
   const entry = credCache.get(userId)
   if (!entry || entry.expiresAt < Date.now()) return null
   return entry.password
